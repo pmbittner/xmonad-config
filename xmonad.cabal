@@ -1,0 +1,22 @@
+cabal-version:   3.16
+name:            xmonad-config
+version:         0.1.0.0
+license:         NONE
+author:          pmbittner
+maintainer:      paul.bittner@uni-ulm.de
+build-type:      Simple
+extra-doc-files: CHANGELOG.md
+
+common warnings
+    ghc-options: -Wall
+
+executable xmonad-config
+    import:           warnings
+    main-is:          xmonad.hs
+    hs-source-dirs:   .
+    default-language: Haskell2010
+    build-depends:
+        base
+      , xmonad
+      , xmonad-contrib
+
