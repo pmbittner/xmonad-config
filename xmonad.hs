@@ -1,21 +1,32 @@
 import XMonad
 import XMonad.Util.EZConfig (additionalKeysP)
-import XMonad.Layout.Spacing
+import XMonad.Layout.Spacing ( spacingWithEdge )
 
 -- for XMobar
 import XMonad.Hooks.DynamicLog
+    ( xmobarColor, PP(ppHiddenNoWindows, ppCurrent, ppHidden) )
 import XMonad.Hooks.StatusBar
-import XMonad.Hooks.ManageDocks
+    ( defToggleStrutsKey, StatusBarConfig, statusBarProp, withEasySB )
+import XMonad.Hooks.ManageDocks ( avoidStruts )
 
 import qualified XMonad.StackSet as W
 
 import XMonad.Util.SpawnOnce (spawnOnce)
+import XMonad.Actions.AfterDrag (afterDrag)
 
--- import Data.Map (Map, fromList)
+import Data.Map (Map, fromList)
 
+myTerminal :: String
 myTerminal   = "kitty"
+
+myBrowser :: String
 myBrowser    = "firefox"
+
+myTextEditor :: String
 myTextEditor = "emacsclient -c -a 'emacs'"
+
+myWorkspaces :: [String]
+myWorkspaces = ["1", "2"]
 
 myStartupHook :: X ()
 myStartupHook = do
@@ -23,7 +34,7 @@ myStartupHook = do
 
 myLayoutHook =
   avoidStruts $ -- leave space for status bar
-  spacingWithEdge 5 $ -- 
+  spacingWithEdge 5 $ --
   layoutHook def
 
 myXmobarPP :: PP
@@ -39,30 +50,30 @@ myStatusBar = statusBarProp "xmobar" (pure myXmobarPP)
 -- S = Shift
 myKeys :: [(String, X ())]
 myKeys =
-  [ ("M-S-r", spawn "xmonad --recompile" >> spawn "xmonad --restart")
+  [ -- XMonad and OS interaction
+    ("M-S-r", spawn "xmonad --recompile" >> spawn "xmonad --restart")
   , ("M-<Return>", spawn "dmenu_run")
   , ("M-q", kill)
-  , ("M-S-s" , withFocused $ windows . W.sink)
+  , ("M-s" , withFocused $ windows . W.sink)
 
   -- programs
   , ("M-t", spawn myTerminal)
   , ("M-f", spawn myBrowser)
   , ("M-e", spawn myTextEditor)
+
+  -- workspace navigation
+  -- , ("M-h", (windows $ W.greedyView $ myWorkspaces !! 0))
+  -- , ("M-l", (windows $ W.greedyView $ myWorkspaces !! 1))
+
+  -- , ("M-h", (windows $ shiftTo Prev nonNSP >> moveTo Prev nonNSP))
+  -- , ("M-l", (windows $ shiftTo Next nonNSP >> moveTo Next nonNSP))
   ]
 
--- myMouseBindings :: XConfig Layout -> Map (KeyMask, Button) (Window -> X ())
--- myMouseBindings XConfig { modMask = modm } = fromList
---   [ ((modm, button1), \w -> do
---         focus w
---         mouseMoveWindow w
---         windows W.sink
---     )
---   , ((modm, button3), \w -> do
---         focus w
---         mouseResizeWindow w
---         windows W.sink
---     )
---   ]
+myMouseBindings :: XConfig Layout -> Map (KeyMask, Button) (Window -> X ())
+myMouseBindings XConfig { modMask = modm } = fromList
+  [ ((modm, button1), \w -> focus w >> mouseMoveWindow w >> afterDrag (windows $ W.sink w))
+  ]
+
 
 main :: IO ()
 main = xmonad
@@ -75,6 +86,6 @@ main = xmonad
   , focusedBorderColor = "#ad8ee6"
   , startupHook = myStartupHook
   , layoutHook = myLayoutHook
-  -- , mouseBindings = myMouseBindings
+  , mouseBindings = myMouseBindings
   }
   `additionalKeysP` myKeys
